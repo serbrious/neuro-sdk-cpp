@@ -8,8 +8,11 @@
                 "/Zi",
                 "/EHsc",
                 "/nologo",
+                "/std:c++17",
                 "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "${fileDirname}/*.cpp"
+                "${fileDirname}/*.cpp",
+                "${fileDirname}/NeuroSDK/*.cpp",
+                "/link Shell32.lib"
             ],
             "options": {
                 "cwd": "${fileDirname}"

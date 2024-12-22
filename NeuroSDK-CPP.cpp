@@ -26,7 +26,8 @@ public:
             vBoard[i] = 0; // Set each cell to empty (0)
         }
         currentPlayer = 'X'; // Set the current player to X (player 1)
-        gameOver = false; // Initialize the winner variable to null character (no winner yet)  
+        gameOver = false; // Initialize the winner variable to null character (no winner yet) 
+        movesMade = 0;
     }
 
     // Called once at the start of the program
@@ -91,14 +92,17 @@ public:
 
         if( gameOver ) {
             // Draw the winning line
-
-            // Display the winner message
-            FillRect(0, ScreenHeight()/2-50, ScreenWidth(), 100, olc::BLACK);
-            DrawString(ScreenWidth()/2-50, ScreenHeight()/2-10, "Player " + std::string(1, currentPlayer) + " wins!", olc::WHITE);
-            DrawString(ScreenWidth()/2-50, ScreenHeight()/2+10, "Press R to restart", olc::WHITE);
-        //    if( GetKey(olc::R).bPressed ) {
-        //         restartGame();
-        //     }
+            if ( movesMade<9 ) {          // Display the winner message
+                FillRect(0, ScreenHeight()/2-50, ScreenWidth(), 100, olc::BLACK);
+                DrawString(ScreenWidth()/2-50, ScreenHeight()/2-10, "Player " + std::string(1, currentPlayer) + " wins!", olc::WHITE);
+                DrawString(ScreenWidth()/2-50, ScreenHeight()/2+10, "Press R to restart", olc::WHITE);
+                //FillRect(winningLineX1, winningLineY1, winningLineWidth, winningLineHeight, olc::WHITE);
+            }
+            else {
+                FillRect(0, ScreenHeight()/2-50, ScreenWidth(), 100, olc::BLACK);
+                DrawString(ScreenWidth()/2-50, ScreenHeight()/2-10, "It's a tie!", olc::WHITE);
+                DrawString(ScreenWidth()/2-50, ScreenHeight()/2+10, "Press R to restart", olc::WHITE);
+            }
         }
 
     }
@@ -139,14 +143,17 @@ public:
                 int index = (y * 3) + x;
                 if (vBoard[index] == 0)
                 {
+                    movesMade++;
                     vBoard[index] = currentPlayer;
-                    gameOver = checkWin();
+                    if( movesMade >=9 ) { // Check for a tie after 9 moves
+                        gameOver = true;
+                    } else { // Check for win after each move
+                        gameOver = checkWin();
+                    }
                     if (!gameOver)
                         currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
                 }
             }
-            // Check win state
-            gameOver = checkWin();
             // Redraw board after each move
             DrawBoard();
         }
@@ -168,6 +175,7 @@ private:
     std::vector<uint8_t> vBoard;
     char currentPlayer;
     bool gameOver;
+    int movesMade;
 };
 
 

@@ -46,6 +46,12 @@ public:
 		return true;
 	}
 
+    void indexToXY(const int index, int *x, int *y) {
+        // Convert the index to 2D coordinates
+        *x = index % 3;
+        *y = index / 3;
+    }
+
     void DrawBoard() 
     { 
         // Draw the tic-tac-toe board here
@@ -96,7 +102,13 @@ public:
                 FillRect(0, ScreenHeight()/2-50, ScreenWidth(), 100, olc::BLACK);
                 DrawString(ScreenWidth()/2-50, ScreenHeight()/2-10, "Player " + std::string(1, currentPlayer) + " wins!", olc::WHITE);
                 DrawString(ScreenWidth()/2-50, ScreenHeight()/2+10, "Press R to restart", olc::WHITE);
-                //FillRect(winningLineX1, winningLineY1, winningLineWidth, winningLineHeight, olc::WHITE);
+
+                // Draw the winning line
+                int winX1, winY1, winX2, winY2;
+                indexToXY(winT, &winX1, &winY1 );
+                indexToXY(winB, &winX2, &winY2 );
+
+                DrawLine(winX1*cellWidth+oXOffset, winY1*cellHeight+oYOffset, winX2*cellWidth+oXOffset, winY2*cellHeight+oYOffset, olc::WHITE);
             }
             else {
                 FillRect(0, ScreenHeight()/2-50, ScreenWidth(), 100, olc::BLACK);
@@ -114,19 +126,27 @@ public:
         {
             if( vBoard[i*3] != 0 && vBoard[i*3] == vBoard[i*3+1] && vBoard[i*3+1] == vBoard[i*3+2] )
             {   // Horizontal win
+                winT = i*3;
+                winB = i*3+2;
                 return true;
             }
             if( vBoard[i] != 0 && vBoard[i] == vBoard[i+3] && vBoard[i+3] == vBoard[i+6] )
             {   // Vertical win
+                winT = i;
+                winB = i+6;
                 return true;
             }
         }
         if( vBoard[0] != 0 && vBoard[0] == vBoard[4] && vBoard[4] == vBoard[8] )
         {   // Diagonal win from top-left to bottom-right   
+            winT = 0;
+            winB = 8;
             return true;    
         }
         if( vBoard[2] != 0 && vBoard[2] == vBoard[4] && vBoard[4] == vBoard[6] )
         {   // Diagonal win from top-right to bottom-left
+            winT = 2;
+            winB = 6;
             return true;    
         }
         return false;    
@@ -176,6 +196,9 @@ private:
     char currentPlayer;
     bool gameOver;
     int movesMade;
+    int winT;  // Left hand/top most square on a win
+    int winB;  // Right hand/bottom most square on a win
+
 };
 
 

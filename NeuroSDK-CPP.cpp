@@ -33,16 +33,17 @@ public:
     // Called once at the start of the program
 	bool OnUserCreate() override
 	{
-        // if (!neurosdk.connect("localhost:8080")){
-        //     std::cerr << "Failed to connect to Neuro" << std::endl;
-        //     return false;
-        // }
-  //      neurosdk.gameinit();
-  //      Sleep(1000);
-  //      neurosdk.sendContext("You are playing tic-tac-toe! This consists of a 3 by 3 grid. You will take turns placing your mark (X or O) on the board. The first player to get three of their marks in a row, either horizontally, vertically, or diagonally, wins the game. Good luck!");
+        if (!neurosdk.connect("localhost:8080")){
+            std::cerr << "Failed to connect to Neuro" << std::endl;
+            return false;
+        }
+
+        neurosdk.gameinit();
+        Sleep(100);
+        neurosdk.sendContext("You are playing tic-tac-toe! This consists of a 3 by 3 grid. You will take turns placing your mark (X or O) on the board. The first player to get three of their marks in a row, either horizontally, vertically, or diagonally, wins the game. Good luck!");
+
         InitBoard();
         DrawBoard();
-
 		return true;
 	}
 

@@ -39,10 +39,11 @@ namespace neuro{
     bool NeuroSDK::sendContext(std::string contextMessage, bool silent){
         json contextMessageJson = {
             {"command", "context"},
-            {"game", gameName},  // Include the game name in the context message
-            {"data", {"message", contextMessage},
-                     {"silent", silent}
-            }
+            {"game", gameName},
+            {"data",{
+                        {"message", contextMessage},
+                        {"silent", silent}
+                } }
         };
         return sendCommand(contextMessageJson);   
     }

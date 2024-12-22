@@ -48,7 +48,39 @@ namespace neuro{
         return sendCommand(contextMessageJson);   
     }
 
+    bool NeuroSDK::registeredAction(std::string actionName, std::string description, std::vector<std::string> parameters) {
+        Action action(actionName, description, ""); 
 
+        json contextMessageJson = {
+            {"name", actionName},
+            {"description", description},
+            {"schema",{
+                } }
+        };
+        return sendCommand(contextMessageJson);
+    }
+
+    void NeuroSDK::unregisterAction(std::string actionName) {
+        json messageJson = {
+            { "command", "actions/unregister" },
+            { "game", gameName },
+            {"description", {actionName} },
+        };
+        sendCommand(messageJson);
+    }
+
+    void NeuroSDK::unregisterAllActions() {
+        std::vector< std::string > actionArray;
+        actionArray.push_back("action1");
+
+        // Implementation for unregistering all actions
+        json messageJson = {
+            { "command", "actions/unregister" },
+            { "game", gameName },
+            { "description", actionArray },
+        };
+        sendCommand(messageJson);
+    }
 
     // ***********************************************************************************
     // Internal functions

@@ -5,6 +5,14 @@ using json = nlohmann::json;
 
 namespace neuro{
 
+class Action {
+    public:
+        Action(std::string name, std::string description, std::string schema);
+        std::string name;
+        std::string description;
+        std::string schema;  // JSON schema for the action parameters
+};
+
 class NeuroSDK {
 public:
     NeuroSDK(const std::string &gameName);
@@ -17,6 +25,14 @@ public:
 
     // Send a new game to the server
     bool gameinit(); 
+
+    // Register an action with Neuro
+    bool registeredAction(std::string actionName, std::string description, std::vector<std::string> parameters);
+
+    // Unregister an action from Neuro 
+    void unregisterAction(std::string actionName);
+
+    void unregisterAllActions();
 
     // Send some context concerning whats happening
     // slient if set will allow Neuro to respond to the message otherwise it's slient

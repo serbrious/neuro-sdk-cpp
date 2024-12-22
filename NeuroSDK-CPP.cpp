@@ -55,14 +55,14 @@ public:
         int cellWidth = ScreenWidth() / 3;
         int cellHeight = ScreenHeight() / 3;
 
-        // A smart person would of calculated these
-        constexpr int xLeftPad = 20;
-        constexpr int xRightPad = 70;
-        constexpr int xTopPad = 15;
-        constexpr int xBottomPad = 65;
-        constexpr int oXOffset = 43;
-        constexpr int oYOffset = 40;
-        constexpr int oRadius = 30;
+        // Yes I know its a bit of an odd way to do this, but calculate our drawing positions with percentages...
+        int xLeftPad = (int)(float)(cellWidth*0.1);
+        int xRightPad = (int)(float)(cellWidth*0.9);
+        int xTopPad = (int)(float)(cellHeight*0.1);
+        int xBottomPad = (int)(float)(cellHeight*0.9);
+        int oXOffset = (int)(float)(cellWidth*0.5); // aka /2
+        int oYOffset = (int)(float)(cellHeight*0.5); // aka /2
+        int oRadius = (int)(float)(cellHeight*0.4);
 
         //Draw tic-tac-toe grid lines
         for (int i = 1; i < 3; ++i)
@@ -89,6 +89,43 @@ public:
             }
         }
 
+        if( gameOver ) {
+            // Draw the winning line
+
+            // Display the winner message
+            FillRect(0, ScreenHeight()/2-50, ScreenWidth(), 100, olc::BLACK);
+            DrawString(ScreenWidth()/2-50, ScreenHeight()/2-10, "Player " + std::string(1, currentPlayer) + " wins!", olc::WHITE);
+            DrawString(ScreenWidth()/2-50, ScreenHeight()/2+10, "Press R to restart", olc::WHITE);
+        //    if( GetKey(olc::R).bPressed ) {
+        //         restartGame();
+        //     }
+        }
+
+    }
+
+    bool checkWin()
+    {
+        // There is probably a smarter way to do this, but it works for now.
+        for( int i=0; i<3; i++ )
+        {
+            if( vBoard[i*3] != 0 && vBoard[i*3] == vBoard[i*3+1] && vBoard[i*3+1] == vBoard[i*3+2] )
+            {   // Horizontal win
+                return true;
+            }
+            if( vBoard[i] != 0 && vBoard[i] == vBoard[i+3] && vBoard[i+3] == vBoard[i+6] )
+            {   // Vertical win
+                return true;
+            }
+        }
+        if( vBoard[0] != 0 && vBoard[0] == vBoard[4] && vBoard[4] == vBoard[8] )
+        {   // Diagonal win from top-left to bottom-right   
+            return true;    
+        }
+        if( vBoard[2] != 0 && vBoard[2] == vBoard[4] && vBoard[4] == vBoard[6] )
+        {   // Diagonal win from top-right to bottom-left
+            return true;    
+        }
+        return false;    
     }
 
 	bool OnUserUpdate(float fElapsedTime) override
@@ -103,11 +140,19 @@ public:
                 if (vBoard[index] == 0)
                 {
                     vBoard[index] = currentPlayer;
-                    currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+                    gameOver = checkWin();
+                    if (!gameOver)
+                        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
                 }
             }
+            // Check win state
+            gameOver = checkWin();
             // Redraw board after each move
             DrawBoard();
+        }
+        if( gameOver && GetKey(olc::R).bPressed ) {
+            InitBoard();
+            DrawBoard(); // Redraw the board after resetting
         }
 		return true;
 	}

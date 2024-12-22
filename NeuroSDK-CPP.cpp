@@ -57,9 +57,7 @@ public:
     { 
         // Draw the tic-tac-toe board here
         // Walk the board populating the X's or O's as needed
-        Clear(olc::BLACK); // Clear the screen to black
-    //    FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::BLACK); // Fill the screen with black
-        
+        Clear(olc::BLACK); // Clear the screen to black       
         int cellWidth = ScreenWidth() / 3;
         int cellHeight = ScreenHeight() / 3;
 

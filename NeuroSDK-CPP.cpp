@@ -10,6 +10,20 @@
 using namespace neuro;
 const char* appName = "tic-tac-toe";
 
+
+class TicTacToeDemo;
+
+class playAction : public neuro::Action {
+public:
+    playAction(TicTacToeDemo *game, std::string name, std::string description, std::string schema) : 
+        Action(name,description,schema), board(game) {}
+
+    bool onAction( json data ) override;
+
+private:
+    TicTacToeDemo *board;
+};
+
 class TicTacToeDemo : public olc::PixelGameEngine
 {
 public:
@@ -118,6 +132,10 @@ public:
 
     }
 
+    void HandlePlayAction(){
+        std::cout << "dealing with play action" << std::endl;
+    }
+
     bool checkWin()
     {
         // There is probably a smarter way to do this, but it works for now.
@@ -151,50 +169,65 @@ public:
         return false;    
     }
 
+    bool makePlay( int x, int y){
+        bool ok = false;
+        if (x >= 0 && x < 3 && y >= 0 && y < 3)
+        {
+            int index = (y * 3) + x;
+            if (vBoard[index] == 0)
+            {
+                movesMade++;
+                vBoard[index] = currentPlayer;
+                if( movesMade >=9 ) { // Check for a tie after 9 moves
+                    gameOver = true;
+                } else { // Check for win after each move
+                    gameOver = checkWin();
+                }
+                if (!gameOver)
+                    currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+            }
+            ok = true;
+        }
+        // Redraw board after each move
+        DrawBoard();
+        return ok;
+    }
+
+    bool AIPlay(int index){
+        int x,y;
+        indexToXY(index,&x,&y);
+        return makePlay(x,y);    
+    }
+
 	bool OnUserUpdate(float fElapsedTime) override
 	{
         if( GetMouse(0).bPressed )
         {
             int x = GetMouseX() / 100;
             int y = GetMouseY() / 100;
-            if (x >= 0 && x < 3 && y >= 0 && y < 3)
-            {
-                int index = (y * 3) + x;
-                if (vBoard[index] == 0)
+
+            if( makePlay(x,y)) {
+
+                neurosdk.unregisterAction("play");
+
+                playAction *action = new playAction(this, "play","Place an O in the specified cell.","");
+                std::vector< std::string > availableCells;
+                // Walk the board (the old way)   
+                for (int i = 0; i < 9; i++)
                 {
-                    movesMade++;
-                    vBoard[index] = currentPlayer;
-                    if( movesMade >=9 ) { // Check for a tie after 9 moves
-                        gameOver = true;
-                    } else { // Check for win after each move
-                        gameOver = checkWin();
+                    if (vBoard[i] == 0) {
+                        availableCells.push_back(cellToName(i));
                     }
-                    if (!gameOver)
-                        currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
                 }
-            }
-            // Redraw board after each move
-            DrawBoard();
+                action->SetSchemaFromArray("cell",availableCells);
+                neurosdk.registerAction(action);
 
-            neurosdk.unregisterAction("play");
+                std::vector<std::string> validActions;
+                validActions.push_back("play");
 
-            Action action("play","Place an O in the specified cell.","");
-            std::vector< std::string > availableCells;
-            // Walk the board (the old way)   
-            for (int i = 0; i < 9; i++)
-            {
-                if (vBoard[i] == 0) {
-                    availableCells.push_back(cellToName(i));
-                }
-            }
-            action.SetSchemaFromArray("cell",availableCells);
-            neurosdk.registerAction(action);
+                neurosdk.forceAction("game is still under way","Its your turn, please make a move",validActions);
 
-            std::vector<std::string> validActions;
-            validActions.push_back("play");
-
-            neurosdk.forceAction("game is still under way","Its your turn, please make a move",validActions);
-
+             }
         }
         if( gameOver && GetKey(olc::R).bPressed ) {
             InitBoard();
@@ -209,7 +242,7 @@ public:
 		return true;
     }
 
-private:
+public:
     // Yeah, I know - but I'm not on the clock so you get it the hammer and nails way.
     std::string cellToName(int cell) {
         // convert cell index to a string representation
@@ -242,6 +275,7 @@ private:
         else return -1; // Invalid cell name
     }
 
+private:
     NeuroSDK neurosdk;
     std::vector<uint8_t> vBoard;
     char currentPlayer;
@@ -252,6 +286,23 @@ private:
 
 };
 
+bool playAction::onAction( json data ) {
+    std::cout << "dealing with play action" << std::endl;
+
+    std::string action = data["data"];
+
+    json toProcess = json::parse(action);
+    std::cout << toProcess.dump() << std::endl;
+
+
+    std::string cellName = toProcess["cell"];
+    int cellNumber = board->nameToCell(cellName);
+    if (cellNumber == -1) {
+        std::cout << "Invalid cell name: " << cellName << std::endl;
+        return false; // Invalid cell name
+    }
+    return board->AIPlay(cellNumber);
+};
 
 int main()
 {
@@ -261,33 +312,3 @@ int main()
 
 	return 0;
 }
-
-
-
-// int main() {
-//     // Initialize NeuroSDK - and set our game name to 'tic-tac-toe'
-//     // OR naughts and crosses if you have a bit more culture :)
-//     NeuroSDK neurosdk("tic-tac-toe");
-
-//     neurosdk.connect("localhost:8080");
-
-//     neurosdk.gameinit();
-
-//     Sleep(1000);
-
-//     neurosdk.sendContext("You are playing tic-tac-toe! This consists of a 3 by 3 grid. You will take turns placing your mark (X or O) on the board. The first player to get three of their marks in a row, either horizontally, vertically, or diagonally, wins the game. Good luck!");
-
-//     Sleep(1000);
-
-//     std::string output;
-
-// //    neurosdk.receive(&output);
-
-//     std::cout << output << std::endl;;
-//     std::cout << "Got: " << output.length() << "chars" << std::endl; ;
-
-//     // Close the connection
-//     neurosdk.disconnect();
-
-//     return 0;
-// }

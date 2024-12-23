@@ -2,6 +2,7 @@
 #include "include/simplews.hpp"
 #include "include/nlohmann/json.hpp"
 using json = nlohmann::json;
+#include <thread>
 
 namespace neuro{
 
@@ -26,7 +27,7 @@ class Action {
         void SetSchemaFromArray( std::string enumName, std::vector<std::string> values);
 
         // Action state handlers
-        virtual void onAction() {};
+        virtual bool onAction(json data) {return true;};
         virtual void onRegister() {};  // Called when the action is registered with the server
         virtual void onUnregister() {};  // Called when the action is unregistered with the server
         virtual void onError(const std::string &error) {};  // Called when an error occurs with the action
@@ -45,17 +46,17 @@ class NeuroSDK {
 public:
     NeuroSDK(const std::string &gameName);
     ~NeuroSDK();
-    // Send the initial connection to the server (this also calls gameinit())
+    // Send the initial connection to the server (this also calls gameinit()) + start receive loop
     bool connect(const std::string &server);
 
-    // Unregister all of our actions and close the connection
+    // Unregister all of our actions and close the connection + stop our receive loop
     void disconnect();
 
     // Send a new game to the server
     bool gameinit(); 
 
     // Register an action with Neuro
-    bool registerAction(Action action);
+    bool registerAction(Action *action);
 
     // Unregister an action from Neuro 
     void unregisterAction(std::string actionName);
@@ -83,7 +84,7 @@ private:
     bool isConnected;
 
     // Array of actions that are currently registered
-    std::vector<Action> registeredActions;  // TODO: Replace with an unordered_set for faster lookups.
+    std::vector<Action*> registeredActions;  // TODO: Replace with an unordered_set for faster lookups.
 
     // Send a RAW string to the server
     bool send(const std::string &message);
@@ -97,6 +98,11 @@ private:
     // Action management
     // Removes an action, returns true if an action is removed.  Returns false otherwise.
     bool removeAction( const Action &action );
+
+    void receiveLoop();
+
+    std::thread *receiveThread;
+    std::atomic_bool stop = false;
 
     // The websocket connection object we use to talk to the server.
     WebSocket ws;

@@ -1,5 +1,6 @@
 #include "include/nlohmann/json.hpp"
 #include "neuro-sdk.hpp" 
+#include <thread>
 
 using json = nlohmann::json;
 
@@ -37,6 +38,10 @@ namespace neuro{
             return false;
         }
         isConnected = true;
+
+        receiveThread = new std::thread(&NeuroSDK::receiveLoop, this);
+        receiveThread->detach();
+
         return true;
     }
 
@@ -65,12 +70,12 @@ namespace neuro{
         return sendCommand(contextMessageJson);   
     }
 
-    bool NeuroSDK::registerAction(Action action) {
+    bool NeuroSDK::registerAction(Action *action) {
         registeredActions.push_back(action);
 
         // We need these as an array for the server to process.
         std::vector< json > actionArray;
-        actionArray.push_back(action.toJSON());
+        actionArray.push_back(action->toJSON());
 
         json contextMessageJson = {
                 { "command", "actions/register" },
@@ -99,8 +104,8 @@ namespace neuro{
     void NeuroSDK::unregisterAllActions() {
         std::vector< std::string > actionArray;
 
-        for(const Action& action : registeredActions) 
-            actionArray.push_back(action.name);
+        for(const Action* action : registeredActions) 
+            actionArray.push_back(action->name);
 
         // Implementation for unregistering all actions
         json messageJson = {
@@ -141,7 +146,7 @@ namespace neuro{
     {
         // Walk the registeredActions list and remove the specified action (if exists)
         for(auto it = registeredActions.begin(); it != registeredActions.end(); ++it) {
-            if(it->name == action.name) {
+            if((*it)->name == action.name) {
                 registeredActions.erase(it);
                 return true; // Action removed successfully
             }
@@ -186,5 +191,59 @@ namespace neuro{
             isConnected = false; 
         }
         std::cout << "Disconnected from the server." << std::endl;
+
+        stop = true; // Signal to stop the receive loop
+
+        //Stop and clean up the receive thread
+        if(receiveThread && receiveThread->joinable()) {
+            receiveThread->join();
+            delete receiveThread;
+            receiveThread = nullptr;
+        }
     }   
+
+    void NeuroSDK::receiveLoop() {
+        std::string output;
+        while (!stop) {
+            receive(&output);
+            if(!output.empty()) {
+                std::cout << output << std::endl; // Process the received data
+// :37 ---> {
+// 2024-12-23 14:01:37   command: 'action',
+// 2024-12-23 14:01:37   data: {
+// 2024-12-23 14:01:37     id: '0.42683994148837057',
+// 2024-12-23 14:01:37     name: 'play',
+// 2024-12-23 14:01:37     data: '{"cell":"bottom-middle"}'
+// 2024-12-23 14:01:37   }
+// 2024-12-23 14:01:37 }
+                // Example: Check for specific action and handle it
+                bool success = false;
+                json j = json::parse(output);
+                if(j["command"] == "action") {
+
+                    std::string actionName = j["data"]["name"];
+                    // Walk registered actions to find a match
+                    for(auto action : registeredActions) {
+                        if(action->name == actionName) {
+                            // Handle the action
+                            success = action->onAction(j["data"]);
+                            break;
+                       }
+                    }
+                }
+                // Send a response back to the Neuro
+                json result = {
+                    {"command", "action/result"},
+                    {"game", gameName},
+                    {"data", {
+                        {"id", j["data"]["id"]},
+                        {"success", success},
+                        {"message", "Yey"}
+                    }
+                } };
+                // Send the response back to the Neuro
+                sendCommand(result);
+            }
+        }
+    }
 }

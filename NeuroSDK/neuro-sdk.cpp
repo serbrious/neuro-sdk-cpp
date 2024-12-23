@@ -48,12 +48,12 @@ namespace neuro{
         return sendCommand(contextMessageJson);   
     }
 
-    bool NeuroSDK::registeredAction(std::string actionName, std::string description, std::vector<std::string> parameters) {
-        Action action(actionName, description, ""); 
+    bool NeuroSDK::registeredAction(std::string actionName, std::string description, std::string schema) {
+        Action action(actionName, description, schema); 
 
         json contextMessageJson = {
-            {"name", actionName},
-            {"description", description},
+            {"command", actionName},
+            { "game", gameName },
             {"schema",{
                 } }
         };
@@ -61,17 +61,24 @@ namespace neuro{
     }
 
     void NeuroSDK::unregisterAction(std::string actionName) {
+        std::vector< std::string > actionArray;
+        actionArray.push_back(actionName);
         json messageJson = {
             { "command", "actions/unregister" },
             { "game", gameName },
-            {"description", {actionName} },
+            { "data", {"action_names", actionArray } },
         };
         sendCommand(messageJson);
+
+        // Remove the action from the local list of registered actions
+        removeAction(Action(actionName,"",""));
     }
 
     void NeuroSDK::unregisterAllActions() {
         std::vector< std::string > actionArray;
-        actionArray.push_back("action1");
+
+        for(const Action& action : registeredActions) 
+            actionArray.push_back(action.name);
 
         // Implementation for unregistering all actions
         json messageJson = {
@@ -80,11 +87,30 @@ namespace neuro{
             { "description", actionArray },
         };
         sendCommand(messageJson);
+
+        registeredActions.clear(); // Clear the local list of registered actions
     }
 
     // ***********************************************************************************
     // Internal functions
     // ***********************************************************************************
+
+    // Action list management
+
+    // Remove an action 
+    bool NeuroSDK::removeAction( const Action &action )
+    {
+        // Walk the registeredActions list and remove the specified action (if exists)
+        for(auto it = registeredActions.begin(); it != registeredActions.end(); ++it) {
+            if(it->name == action.name) {
+                registeredActions.erase(it);
+                return true; // Action removed successfully
+            }
+        }
+
+        return false;
+    }
+
 
     // Basic RAW send function, will be replaced with task specific ones
     bool NeuroSDK::send(const std::string& message) {

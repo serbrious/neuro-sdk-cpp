@@ -27,7 +27,7 @@ public:
     bool gameinit(); 
 
     // Register an action with Neuro
-    bool registeredAction(std::string actionName, std::string description, std::vector<std::string> parameters);
+    bool registeredAction(std::string actionName, std::string description, std::string schema);
 
     // Unregister an action from Neuro 
     void unregisterAction(std::string actionName);
@@ -50,7 +50,7 @@ private:
     bool isConnected;
 
     // Array of actions that are currently registered
-    std::vector<std::string> registeredActions;  // TODO: Replace with an unordered_set for faster lookups.
+    std::vector<Action> registeredActions;  // TODO: Replace with an unordered_set for faster lookups.
 
     // Send a RAW string to the server
     bool send(const std::string &message);
@@ -60,6 +60,10 @@ private:
    
     // Send a JSON command to the server
     bool sendCommand(const json &command);
+
+    // Action management
+    // Removes an action, returns true if an action is removed.  Returns false otherwise.
+    bool removeAction( const Action &action );
 
     // The websocket connection object we use to talk to the server.
     WebSocket ws;

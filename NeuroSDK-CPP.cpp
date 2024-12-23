@@ -175,6 +175,26 @@ public:
             }
             // Redraw board after each move
             DrawBoard();
+
+            neurosdk.unregisterAction("play");
+
+            Action action("play","Place an O in the specified cell.","");
+            std::vector< std::string > availableCells;
+            // Walk the board (the old way)   
+            for (int i = 0; i < 9; i++)
+            {
+                if (vBoard[i] == 0) {
+                    availableCells.push_back(cellToName(i));
+                }
+            }
+            action.SetSchemaFromArray("cell",availableCells);
+            neurosdk.registerAction(action);
+
+            std::vector<std::string> validActions;
+            validActions.push_back("play");
+
+            neurosdk.forceAction("game is still under way","Its your turn, please make a move",validActions);
+
         }
         if( gameOver && GetKey(olc::R).bPressed ) {
             InitBoard();
@@ -190,6 +210,38 @@ public:
     }
 
 private:
+    // Yeah, I know - but I'm not on the clock so you get it the hammer and nails way.
+    std::string cellToName(int cell) {
+        // convert cell index to a string representation
+        // on the from [top, middle, bottom] [left,middle,right]
+        switch(cell) {
+            case 0: return "top-left";
+            case 1: return "top-middle";
+            case 2: return "top-right";
+            case 3: return "middle-left";
+            case 4: return "middle-middle";
+            case 5: return "middle-right";
+            case 6: return "bottom-left";
+            case 7: return "bottom-middle";
+            case 8: return "bottom-right";
+            default: return "unknown";
+        }     
+    }
+
+    // Inverse of cellToName
+    int nameToCell(std::string name) {
+        if (name == "top-left") return 0;
+        else if (name == "top-middle") return 1;
+        else if (name == "top-right") return 2;
+        else if (name == "middle-left") return 3;
+        else if (name == "middle-middle") return 4;
+        else if (name == "middle-right") return 5;
+        else if (name == "bottom-left") return 6;
+        else if (name == "bottom-middle") return 7;
+        else if (name == "bottom-right") return 8;
+        else return -1; // Invalid cell name
+    }
+
     NeuroSDK neurosdk;
     std::vector<uint8_t> vBoard;
     char currentPlayer;

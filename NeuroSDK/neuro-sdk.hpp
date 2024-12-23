@@ -32,12 +32,13 @@ class Action {
         virtual void onError(const std::string &error) {};  // Called when an error occurs with the action
 
 
-        std::string toJSON();
+        json toJSON();
     protected:
         friend class NeuroSDK;
         std::string name;
         std::string description;
         std::string schema;  // JSON schema for the action parameters
+        json jSchema;
 };
 
 class NeuroSDK {
@@ -64,6 +65,11 @@ public:
     // Send some context concerning whats happening
     // slient if set will allow Neuro to respond to the message otherwise it's slient
     bool sendContext(std::string contextMessage, bool slient=true);
+
+    // Force a decsion from Neuro based on the list of registered actions
+    // gamestate is what is currently happening, e.g. "the game is still under way"
+    // whatToDo is what we want Neuro to do, e.g. "Its your turn, please make a move"
+    bool forceAction( std::string gameState, std::string whatToDo, std::vector<std::string> listOfActions );
 
     // Disallow copy and asignment operators
     NeuroSDK(const NeuroSDK&) = delete;

@@ -6,20 +6,19 @@ using json = nlohmann::json;
 namespace neuro{
 
     // Actions class
-    std::string Action::toJSON(){
+    json Action::toJSON(){
         json j;
         j["name"] = name;
         j["description"] = description;
-        j["schema"] = schema;
-        return j.dump();
+        j["schema"] = jSchema;
+        return j;
     }
 
     void Action::SetSchemaFromArray( std::string enumName, std::vector<std::string> values){
-        json j = { enumName, {
+       jSchema = {{ enumName, {{
 			        "enum", values,
-		         }
+		         }}}
 	    };
-        schema = j.dump();
     }
 
     // Some basic con/de-structors
@@ -70,15 +69,15 @@ namespace neuro{
         registeredActions.push_back(action);
 
         // We need these as an array for the server to process.
-        std::vector< std::string > actionArray;
+        std::vector< json > actionArray;
         actionArray.push_back(action.toJSON());
 
         json contextMessageJson = {
                 { "command", "actions/register" },
                 {"game", gameName},
-                {"data", {
+                {"data", {{
                     "actions", actionArray,
-                }}
+                }}}
             };
         return sendCommand(contextMessageJson);
     }
@@ -89,7 +88,7 @@ namespace neuro{
         json messageJson = {
             { "command", "actions/unregister" },
             { "game", gameName },
-            { "data", {"action_names", actionArray } },
+            { "data", {{"action_names", actionArray } }},
         };
         sendCommand(messageJson);
 
@@ -113,6 +112,23 @@ namespace neuro{
 
         registeredActions.clear(); // Clear the local list of registered actions
     }
+
+    bool NeuroSDK::forceAction( std::string gameState, std::string whatToDo, std::vector<std::string> listOfActions ) {
+        json messageJson = {
+            { "command", "actions/force" },
+            { "game", gameName },
+            { "data",  {
+                {"state", gameState},
+                {"query", whatToDo},
+                {"ephemeral_context", false},
+                {"action_names", listOfActions},
+            }
+            }
+        };
+
+        return sendCommand(messageJson);  // Send the command to force an action and return the result of the operation
+    }
+
 
     // ***********************************************************************************
     // Internal functions
@@ -146,6 +162,7 @@ namespace neuro{
     bool NeuroSDK::sendCommand(const json &command) {
         try {
             std::string cmdStr = command.dump();
+            std::cout << cmdStr << std::endl;
             ws.send(cmdStr);
             return true;
         } catch (const std::exception& e) {

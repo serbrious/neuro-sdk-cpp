@@ -5,9 +5,34 @@ using json = nlohmann::json;
 
 namespace neuro{
 
+// Forward def
+class NeuroSDK;
+
 class Action {
     public:
-        Action(std::string name, std::string description, std::string schema);
+        Action(std::string name, std::string description, std::string schema): name(name), description(description), schema(schema) {}
+        virtual ~Action() {}
+
+        // Not normally a fan of getters and setters in c++ but we will need a modicum of thread safety
+        std::string& GetName() { return name; }
+        std::string& GetDescription() { return description; }
+        std::string& GetSchema() { return schema; }  // Getter for JSON schema
+        void SetName(std::string newName) { name = newName; }
+        void SetDescription(std::string newDescription) { description = newDescription; }
+        void SetSchema(std::string newSchema) { schema = newSchema; }  // Setter for JSON schema
+
+
+
+        // Action state handlers
+        virtual void onAction() {};
+        virtual void onRegister() {};  // Called when the action is registered with the server
+        virtual void onUnregister() {};  // Called when the action is unregistered with the server
+        virtual void onError(const std::string &error) {};  // Called when an error occurs with the action
+
+
+        std::string toJSON();
+    protected:
+        friend class NeuroSDK;
         std::string name;
         std::string description;
         std::string schema;  // JSON schema for the action parameters

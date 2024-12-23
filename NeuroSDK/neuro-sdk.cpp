@@ -4,6 +4,16 @@
 using json = nlohmann::json;
 
 namespace neuro{
+
+    // Actions class
+    std::string Action::toJSON(){
+        json j;
+        j["name"] = name;
+        j["description"] = description;
+        j["schema"] = schema;
+        return j.dump();
+    }
+
     // Some basic con/de-structors
     NeuroSDK::NeuroSDK(const std::string &gameName) : isConnected(false), gameName(gameName), ws() {}
 

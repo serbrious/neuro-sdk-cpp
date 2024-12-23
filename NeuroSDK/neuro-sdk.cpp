@@ -14,6 +14,14 @@ namespace neuro{
         return j.dump();
     }
 
+    void Action::SetSchemaFromArray( std::string enumName, std::vector<std::string> values){
+        json j = { enumName, {
+			        "enum", values,
+		         }
+	    };
+        schema = j.dump();
+    }
+
     // Some basic con/de-structors
     NeuroSDK::NeuroSDK(const std::string &gameName) : isConnected(false), gameName(gameName), ws() {}
 
@@ -58,15 +66,20 @@ namespace neuro{
         return sendCommand(contextMessageJson);   
     }
 
-    bool NeuroSDK::registeredAction(std::string actionName, std::string description, std::string schema) {
-        Action action(actionName, description, schema); 
+    bool NeuroSDK::registerAction(Action action) {
+        registeredActions.push_back(action);
+
+        // We need these as an array for the server to process.
+        std::vector< std::string > actionArray;
+        actionArray.push_back(action.toJSON());
 
         json contextMessageJson = {
-            {"command", actionName},
-            { "game", gameName },
-            {"schema",{
-                } }
-        };
+                { "command", "actions/register" },
+                {"game", gameName},
+                {"data", {
+                    "actions", actionArray,
+                }}
+            };
         return sendCommand(contextMessageJson);
     }
 
@@ -120,7 +133,6 @@ namespace neuro{
 
         return false;
     }
-
 
     // Basic RAW send function, will be replaced with task specific ones
     bool NeuroSDK::send(const std::string& message) {

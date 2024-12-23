@@ -21,7 +21,9 @@ class Action {
         void SetDescription(std::string newDescription) { description = newDescription; }
         void SetSchema(std::string newSchema) { schema = newSchema; }  // Setter for JSON schema
 
-
+        // Creates a schema(aka list of stuff to do) from provided list of options
+        // This seems to be the generic case
+        void SetSchemaFromArray( std::string enumName, std::vector<std::string> values);
 
         // Action state handlers
         virtual void onAction() {};
@@ -52,7 +54,7 @@ public:
     bool gameinit(); 
 
     // Register an action with Neuro
-    bool registeredAction(std::string actionName, std::string description, std::string schema);
+    bool registerAction(Action action);
 
     // Unregister an action from Neuro 
     void unregisterAction(std::string actionName);

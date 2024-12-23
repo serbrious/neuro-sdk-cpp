@@ -43,6 +43,29 @@ private:
         return true;
     }
 
+    std::string generateRandomString(size_t length) {
+    const std::string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                  "abcdefghijklmnopqrstuvwxyz"
+                                  "0123456789+/=";
+    
+    std::random_device rd;  // Obtain a random number from hardware
+    std::mt19937 gen(rd()); // Seed the generator
+    std::uniform_int_distribution<> distr(0, characters.size() - 1);
+
+    std::string randomString;
+    for (size_t i = 0; i < length; ++i) {
+        randomString += characters[distr(gen)];
+    }
+
+    return randomString;
+}
+
+    std::string generateSecWebSocketKey() {
+        static constexpr size_t keyLength = 16;
+        std::string j = generateRandomString(keyLength);
+        return base64_encode(j);
+    }
+
 public:
     WebSocket() {
         WSADATA wsaData;
@@ -98,12 +121,12 @@ public:
         }
 
         // WebSocket handshake would go here
-        // This is highly simplified; you would need to craft the actual HTTP Upgrade request here
+        std::string key = generateSecWebSocketKey();
         std::string handshake = "GET / HTTP/1.1\r\n"
             "Host: " + host + "\r\n"
             "Upgrade: websocket\r\n"
             "Connection: Upgrade\r\n"
-            "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+            "Sec-WebSocket-Key: "+key+"\r\n"
             "Sec-WebSocket-Version: 13\r\n\r\n";
         if (!send_all((uint8_t*)handshake.c_str(), handshake.length())) {
             closesocket(socket_fd);
@@ -245,6 +268,49 @@ public:
             closesocket(socket_fd);
             socket_fd = INVALID_SOCKET;
         }
+    }
+
+    // Base64 encoding
+    const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+
+    static inline bool is_base64(unsigned char c) {
+        return (isalnum(c) || (c == '+') || (c == '/'));
+    }
+
+    std::string base64_encode(const std::string& data) {
+        std::string ret;
+        int i = 0, j = 0;
+        unsigned char char_array_3[3], char_array_4[4];
+
+        for (size_t len = data.size(); i < len;) {
+            char_array_3[i % 3] = data[i++];
+            if (i % 3 == 0) {
+                char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+                char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+                char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+                char_array_4[3] = char_array_3[2] & 0x3f;
+
+                for (size_t k = 0; k < 4; k++)
+                    ret += base64_chars[char_array_4[k]];
+            }
+        }
+
+        if (i % 3) {
+            for (j = i; j % 3; j++) char_array_3[j % 3] = 0;
+
+            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+            char_array_4[3] = char_array_3[2] & 0x3f;
+
+            for (size_t k = 0; k < i % 3 + 1; k++)
+                ret += base64_chars[char_array_4[k]];
+
+            while ((i++ % 3)) ret += '=';
+        }
+
+        return ret;
     }
 };
 

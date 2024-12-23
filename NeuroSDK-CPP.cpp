@@ -33,7 +33,7 @@ public:
     // Called once at the start of the program
 	bool OnUserCreate() override
 	{
-        if (!neurosdk.connect("localhost:8080")){
+        if (!neurosdk.connect("localhost:8000")){
             std::cerr << "Failed to connect to Neuro" << std::endl;
             return false;
         }

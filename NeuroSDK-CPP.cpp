@@ -13,6 +13,7 @@ const char* appName = "tic-tac-toe";
 
 class TicTacToeDemo;
 
+// Action to handle "play" actions from NeuroSDK
 class playAction : public neuro::Action {
 public:
     playAction(TicTacToeDemo *game, std::string name, std::string description, std::string schema) : 
@@ -24,12 +25,16 @@ private:
     TicTacToeDemo *board;
 };
 
+// Main game class
 class TicTacToeDemo : public olc::PixelGameEngine
 {
 public:
-	TicTacToeDemo() : neurosdk(appName)
+	TicTacToeDemo() : neurosdk(appName),
+            cellNames({ "top left",    "top middle",    "top right",
+                        "middle left", "middle middle", "middle right",
+                        "bottom left", "bottom middle", "bottom right" })
 	{
-		sAppName = appName;
+		sAppName = appName;   
 	}
 
 public:
@@ -263,36 +268,26 @@ public:
     }
 
 public:
-    // Yeah, I know - but I'm not on the clock so you get it the hammer and nails way.
+    
     std::string cellToName(int cell) {
         // convert cell index to a string representation
         // on the from [top, middle, bottom] [left,middle,right]
-        switch(cell) {
-            case 0: return "top-left";
-            case 1: return "top-middle";
-            case 2: return "top-right";
-            case 3: return "middle-left";
-            case 4: return "middle-middle";
-            case 5: return "middle-right";
-            case 6: return "bottom-left";
-            case 7: return "bottom-middle";
-            case 8: return "bottom-right";
-            default: return "unknown";
-        }     
+        // Check if the index is within the valid range
+        if (cell >= 0 && cell < static_cast<int>(cellNames.size())) {
+            return cellNames[cell];
+        } else {
+            return "unknown";
+        }   
     }
 
     // Inverse of cellToName
     int nameToCell(std::string name) {
-        if (name == "top-left") return 0;
-        else if (name == "top-middle") return 1;
-        else if (name == "top-right") return 2;
-        else if (name == "middle-left") return 3;
-        else if (name == "middle-middle") return 4;
-        else if (name == "middle-right") return 5;
-        else if (name == "bottom-left") return 6;
-        else if (name == "bottom-middle") return 7;
-        else if (name == "bottom-right") return 8;
-        else return -1; // Invalid cell name
+        // Iterate through the vector to find the matching name, 'cos why not?
+        for (int i = 0; i < static_cast<int>(cellNames.size()); ++i) {
+            if (name == cellNames[i]) {
+                return i;
+            }
+        }
     }
 
 private:
@@ -304,6 +299,8 @@ private:
     int winT;  // Left hand/top most square on a win
     int winB;  // Right hand/bottom most square on a win
 
+    // Cell name mappings
+    const std::vector<std::string> cellNames; 
 };
 
 bool playAction::onAction( json data ) {

@@ -84,7 +84,11 @@ namespace neuro{
                     "actions", actionArray,
                 }}}
             };
-        return sendCommand(contextMessageJson);
+        if( sendCommand(contextMessageJson) ) {
+            action->onRegister();
+            return true; 
+        }
+        return false;  // Return false if the command failed to send.
     }
 
     void NeuroSDK::unregisterActions( std::vector< std::string > actions ) {
@@ -145,6 +149,7 @@ namespace neuro{
         for(auto it = registeredActions.begin(); it != registeredActions.end(); ++it) {
             if((*it)->name == action.name) {
                 // delete the action object; then remove it from the list
+                (*it)->onUnregister(); // Call the onUnregister method before deleting the action object.
                 registeredActions.erase(it);
                 delete *it;
                 return true; // Action removed successfully

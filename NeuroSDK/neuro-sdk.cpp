@@ -100,7 +100,7 @@ namespace neuro{
         sendCommand(messageJson);
         // Remove the actions from the local list of registered actions
         for(const std::string actionName : actions) {
-            removeAction(Action(actionName,"",""));
+            removeAction(Action(actionName,""));
         }
     }
 

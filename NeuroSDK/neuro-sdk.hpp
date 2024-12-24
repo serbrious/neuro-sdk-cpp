@@ -3,6 +3,7 @@
 #include "include/nlohmann/json.hpp"
 using json = nlohmann::json;
 #include <thread>
+#include <tuple>
 
 namespace neuro{
 
@@ -11,10 +12,7 @@ class NeuroSDK;
 
 class Action {
     public:
-        Action(std::string name, std::string description, std::string schema): name(name), description(description){
-            jSchema = json::parse(schema);
-        };
-        Action(std::string name, std::string description, json schema): name(name), description(description), jSchema(schema){}
+        Action(std::string name, std::string description, json schema = {}): name(name), description(description), jSchema(schema){}
         virtual ~Action() {};
 
         // Not normally a fan of getters and setters in c++ but we will need a modicum of thread safety
@@ -33,7 +31,7 @@ class Action {
         // Action state handlers
         // Called when an action is received from the Neuro
         // Return is success + a message to return
-        virtual std::tuple<bool, std::string> onAction(json data);
+        virtual std::tuple<bool, std::string> onAction(json data) { return {false, "Action not implemented"};  };
         virtual void onRegister() {};  // Called when the action is registered with the server
         virtual void onUnregister() {};  // Called when the action is unregistered with the server
 //        virtual void onError(const std::string &error) {};  // Called when an error occurs with the action

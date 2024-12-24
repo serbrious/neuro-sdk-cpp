@@ -268,16 +268,14 @@ public:
     }
 
 public:
-    
     std::string cellToName(int cell) {
         // convert cell index to a string representation
         // on the from [top, middle, bottom] [left,middle,right]
         // Check if the index is within the valid range
         if (cell >= 0 && cell < static_cast<int>(cellNames.size())) {
             return cellNames[cell];
-        } else {
-            return "unknown";
-        }   
+        } 
+        return "unknown";   
     }
 
     // Inverse of cellToName
@@ -288,6 +286,7 @@ public:
                 return i;
             }
         }
+        return -1;
     }
 
 private:

@@ -217,13 +217,17 @@ namespace neuro{
                 bool success = false;
                 json j = json::parse(output);
                 if(j["command"] == "action") {
-
+                    // Extract action name from JSON data
                     std::string actionName = j["data"]["name"];
+                    std::string actionMessage = "Something happened";
+
                     // Walk registered actions to find a match
                     for(auto action : registeredActions) {
                         if(action->name == actionName) {
                             // Handle the action
-                            success = action->onAction(j["data"]);
+                            auto result = action->onAction(j["data"]);
+                            success = std::get<0>(result); // Extract the success status from the tuple
+                            actionMessage = std::get<1>(result); // Extract the message from the tuple
                             break;
                        }
                     }
@@ -235,7 +239,7 @@ namespace neuro{
                         {"data", {
                             {"id", j["data"]["id"]},
                             {"success", success},
-                            {"message", "Yey"}
+                            {"message", actionMessage}
                         }
                     } };
                     // Send the response back to the Neuro

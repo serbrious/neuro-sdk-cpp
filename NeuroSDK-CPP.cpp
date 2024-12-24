@@ -19,7 +19,7 @@ public:
     playAction(TicTacToeDemo *game, std::string name, std::string description, std::string schema) : 
         Action(name,description,schema), board(game) {}
 
-    bool onAction( json data ) override;
+    std::tuple<bool, std::string> onAction( json data ) override;
 
 private:
     TicTacToeDemo *board;
@@ -303,7 +303,7 @@ private:
     const std::vector<std::string> cellNames; 
 };
 
-bool playAction::onAction( json data ) {
+std::tuple<bool, std::string> playAction::onAction( json data ) {
     std::cout << "dealing with play action" << std::endl;
 
     std::string action = data["data"];
@@ -311,14 +311,20 @@ bool playAction::onAction( json data ) {
     json toProcess = json::parse(action);
     std::cout << toProcess.dump() << std::endl;
 
-
     std::string cellName = toProcess["cell"];
     int cellNumber = board->nameToCell(cellName);
     if (cellNumber == -1) {
         std::cout << "Invalid cell name: " << cellName << std::endl;
-        return false; // Invalid cell name
+        return std::make_tuple(false, "Invalid cell name"); // Invalid cell name
     }
-    return board->AIPlay(cellNumber);
+
+    bool result = board->AIPlay(cellNumber);
+
+    if (!result) {
+        std::cout << "Failed to play in cell: " << cellName << std::endl;
+        return std::make_tuple(false, "Failed to play in cell"); // Failed to play in cell
+    }
+    return std::make_tuple(true, "Successfully placed your mark");
 };
 
 int main()

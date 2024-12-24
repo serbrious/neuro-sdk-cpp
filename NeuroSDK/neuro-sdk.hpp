@@ -27,7 +27,10 @@ class Action {
         void SetSchemaFromArray( std::string enumName, std::vector<std::string> values);
 
         // Action state handlers
-        virtual bool onAction(json data) {return true;};
+
+        // Called when an action is received from the Neuro
+        // Return is success + a message to return
+        virtual std::tuple<bool, std::string> onAction(json data);
         virtual void onRegister() {};  // Called when the action is registered with the server
         virtual void onUnregister() {};  // Called when the action is unregistered with the server
         virtual void onError(const std::string &error) {};  // Called when an error occurs with the action

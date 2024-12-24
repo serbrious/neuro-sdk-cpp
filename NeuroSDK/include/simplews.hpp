@@ -7,10 +7,19 @@
 #include <iostream>
 #include <cstdio>
 #include <functional>
+
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-
 #pragma comment(lib, "ws2_32.lib")
+#elif
+// Socket headers for linux
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#endif
+
 
 class WebSocket {
 public:
@@ -67,18 +76,11 @@ private:
     }
 
 public:
-    WebSocket() {
-        WSADATA wsaData;
-        int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        if (iResult != 0) {
-            throw std::runtime_error("WSAStartup failed");
-        }
-    }
+    WebSocket() {}
 
     ~WebSocket() {
         if (socket_fd != INVALID_SOCKET) {
             closesocket(socket_fd);
-            WSACleanup();
         }
     }
 
@@ -199,6 +201,7 @@ public:
             sendBuffer[9] = (uint8_t)(lengthOfMessage & 0xff);
             offset = 8;
         }
+        
         //generate the masking key
         std::random_device randomDevice;
         std::mt19937 mersenneTwister;

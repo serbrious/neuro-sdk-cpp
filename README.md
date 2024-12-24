@@ -8,6 +8,8 @@ This is published of the offchance that anyone will find it useful - I'll probab
 The demo is a version of tic-tac-toe and hopefully there are enough comments to show the basic usage of the SDK.
 You are required to implement any thread safety required - though games are usually not highly threaded BUT this still needs to be kept in mind.
 
+> [NOTE]: This is currently only tested under Windows, but there is no reason why it shouldn't work on other platforms.
+
 ## Use
 The main sdk code is contained in the `NeuroSDK` the example tic-tac-toe game is in the root folder.  You need to use a compiler thats capable and configured for at least c++17.
 

@@ -6,6 +6,7 @@
 
 #include <string>
 #include "NeuroSDK/neuro-sdk.hpp"
+#include "NeuroSDK/network-helper.h"
 
 using namespace neuro;
 const char* appName = "tic-tac-toe";
@@ -328,6 +329,9 @@ std::tuple<bool, std::string> playAction::onAction( json data ) {
 
 int main()
 {
+    // Init the network if needed
+    NetworkHelper networkHelper;
+
 	TicTacToeDemo demo;
 	if (demo.Construct(256, 240, 4, 4))
 		demo.Start();

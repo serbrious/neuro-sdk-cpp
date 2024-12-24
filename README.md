@@ -3,6 +3,9 @@ This repository contains the API documentation for allowing Neuro-sama to play g
 
 This is a c++ verion of the offical SDK hosted at [here](https://github.com/VedalAI/neuro-game-sdk)
 
+The demo is a version of tic-tac-toe and hopefully there are enough comments to show the basic usage of the SDK.
+You are required to implement any thread safety required - though games are usually not highly threaded BUT this still needs to be kept in mind.
+
 ## Use
 The main sdk code is contained in the `NeuroSDK` the example tic-tac-toe game is in the root folder.  You need to use a compiler thats capable and configured for at least c++17.
 

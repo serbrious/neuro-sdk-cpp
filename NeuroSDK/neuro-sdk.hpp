@@ -11,37 +11,43 @@ class NeuroSDK;
 
 class Action {
     public:
-        Action(std::string name, std::string description, std::string schema): name(name), description(description), schema(schema) {}
-        virtual ~Action() {}
+        Action(std::string name, std::string description, std::string schema): name(name), description(description){
+            jSchema = json::parse(schema);
+        };
+        Action(std::string name, std::string description, json schema): name(name), description(description), jSchema(schema){}
+        virtual ~Action() {};
 
         // Not normally a fan of getters and setters in c++ but we will need a modicum of thread safety
-        std::string& GetName() { return name; }
-        std::string& GetDescription() { return description; }
-        std::string& GetSchema() { return schema; }  // Getter for JSON schema
-        void SetName(std::string newName) { name = newName; }
-        void SetDescription(std::string newDescription) { description = newDescription; }
-        void SetSchema(std::string newSchema) { schema = newSchema; }  // Setter for JSON schema
+        std::string& GetName() { return name; };
+        std::string& GetDescription() { return description; };
+        json& GetSchema() { return jSchema; };  // Getter for JSON schema
+        void SetName(std::string newName) { name = newName; };
+        void SetDescription(std::string newDescription) { description = newDescription; };
+        void SetSchema(std::string newSchema) { jSchema = json::parse(newSchema); };  // Setter for JSON schema
+        void SetSchema(json newSchema) { jSchema = newSchema; };
 
         // Creates a schema(aka list of stuff to do) from provided list of options
         // This seems to be the generic case
         void SetSchemaFromArray( std::string enumName, std::vector<std::string> values);
 
         // Action state handlers
-
         // Called when an action is received from the Neuro
         // Return is success + a message to return
         virtual std::tuple<bool, std::string> onAction(json data);
         virtual void onRegister() {};  // Called when the action is registered with the server
         virtual void onUnregister() {};  // Called when the action is unregistered with the server
-        virtual void onError(const std::string &error) {};  // Called when an error occurs with the action
+//        virtual void onError(const std::string &error) {};  // Called when an error occurs with the action
 
-
+        // Convert this Action object into JSON format for sending over the network
         json toJSON();
+
+        // operator json, return the JSON representation of this Action object
+        operator json() { return toJSON(); };  // Allows for implicit conversion to json
+
     protected:
         friend class NeuroSDK;
         std::string name;
         std::string description;
-        std::string schema;  // JSON schema for the action parameters
         json jSchema;
 };
 

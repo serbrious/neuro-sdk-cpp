@@ -42,6 +42,8 @@ public:
         currentPlayer = 'X'; // Set the current player to X (player 1)
         gameOver = false; // Initialize the winner variable to null character (no winner yet) 
         movesMade = 0;
+
+        neurosdk.sendContext("You are playing tic-tac-toe! This consists of a 3 by 3 grid. You will take turns placing your mark (X or O) on the board. The first player to get three of their marks in a row, either horizontally, vertically, or diagonally, wins the game. Good luck!");
     }
 
     // Called once at the start of the program
@@ -54,10 +56,11 @@ public:
 
         neurosdk.gameinit();
         Sleep(100);
-        neurosdk.sendContext("You are playing tic-tac-toe! This consists of a 3 by 3 grid. You will take turns placing your mark (X or O) on the board. The first player to get three of their marks in a row, either horizontally, vertically, or diagonally, wins the game. Good luck!");
 
         InitBoard();
         DrawBoard();
+
+        neurosdk.sendContext("A new game has began!");
 		return true;
 	}
 
@@ -180,8 +183,18 @@ public:
                 vBoard[index] = currentPlayer;
                 if( movesMade >=9 ) { // Check for a tie after 9 moves
                     gameOver = true;
+                    neurosdk.unregisterAllActions();
+                    neurosdk.sendContext("Oh no! its a draw, better luck next time!");                    
                 } else { // Check for win after each move
                     gameOver = checkWin();
+                    if( gameOver ){
+                        neurosdk.unregisterAllActions();
+                        if( currentPlayer == 'X' ) {
+                            neurosdk.sendContext("Oh no! you lost, better luck next time!");
+                        } else {
+                            neurosdk.sendContext("Congratulations you won!  You beat the competition!");
+                        }                        
+                    }
                 }
                 if (!gameOver)
                     currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
@@ -199,34 +212,41 @@ public:
         return makePlay(x,y);    
     }
 
+    bool aiPlay() {
+        if( gameOver )
+            return false;
+
+        neurosdk.unregisterAction("play");
+
+        playAction *action = new playAction(this, "play","Place an O in the specified cell.","");
+        std::vector< std::string > availableCells;
+        // Walk the board (the old way)   
+        for (int i = 0; i < 9; i++)
+        {
+            if (vBoard[i] == 0) {
+                availableCells.push_back(cellToName(i));
+            }
+        }                
+        action->SetSchemaFromArray("cell",availableCells);
+        neurosdk.registerAction(action);
+
+        std::vector<std::string> validActions;
+        validActions.push_back("play");
+
+        neurosdk.forceAction("game is still under way","Its your turn, please make a move",validActions);
+
+        return true;
+    }
+
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-        if( GetMouse(0).bPressed )
+        if( !gameOver && GetMouse(0).bPressed )
         {
             int x = GetMouseX() / 100;
             int y = GetMouseY() / 100;
 
             if( makePlay(x,y)) {
-
-                neurosdk.unregisterAction("play");
-
-                playAction *action = new playAction(this, "play","Place an O in the specified cell.","");
-                std::vector< std::string > availableCells;
-                // Walk the board (the old way)   
-                for (int i = 0; i < 9; i++)
-                {
-                    if (vBoard[i] == 0) {
-                        availableCells.push_back(cellToName(i));
-                    }
-                }
-                action->SetSchemaFromArray("cell",availableCells);
-                neurosdk.registerAction(action);
-
-                std::vector<std::string> validActions;
-                validActions.push_back("play");
-
-                neurosdk.forceAction("game is still under way","Its your turn, please make a move",validActions);
-
+                aiPlay();
              }
         }
         if( gameOver && GetKey(olc::R).bPressed ) {

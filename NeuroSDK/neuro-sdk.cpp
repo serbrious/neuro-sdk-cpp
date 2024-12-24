@@ -101,17 +101,20 @@ namespace neuro{
         removeAction(Action(actionName,"",""));
     }
 
+    // This could should be merged with the above to reduce repeated code.
     void NeuroSDK::unregisterAllActions() {
         std::vector< std::string > actionArray;
 
-        for(const Action* action : registeredActions) 
+        for(const Action* action : registeredActions) {
             actionArray.push_back(action->name);
+            removeAction(Action(action->name,"",""));
+        }
 
         // Implementation for unregistering all actions
         json messageJson = {
             { "command", "actions/unregister" },
             { "game", gameName },
-            { "description", actionArray },
+            { "data", {{"action_names", actionArray } }},
         };
         sendCommand(messageJson);
 
@@ -147,7 +150,9 @@ namespace neuro{
         // Walk the registeredActions list and remove the specified action (if exists)
         for(auto it = registeredActions.begin(); it != registeredActions.end(); ++it) {
             if((*it)->name == action.name) {
+                // delete the action object; then remove it from the list
                 registeredActions.erase(it);
+                delete *it;
                 return true; // Action removed successfully
             }
         }
@@ -208,15 +213,7 @@ namespace neuro{
             receive(&output);
             if(!output.empty()) {
                 std::cout << output << std::endl; // Process the received data
-// :37 ---> {
-// 2024-12-23 14:01:37   command: 'action',
-// 2024-12-23 14:01:37   data: {
-// 2024-12-23 14:01:37     id: '0.42683994148837057',
-// 2024-12-23 14:01:37     name: 'play',
-// 2024-12-23 14:01:37     data: '{"cell":"bottom-middle"}'
-// 2024-12-23 14:01:37   }
-// 2024-12-23 14:01:37 }
-                // Example: Check for specific action and handle it
+
                 bool success = false;
                 json j = json::parse(output);
                 if(j["command"] == "action") {
@@ -230,19 +227,20 @@ namespace neuro{
                             break;
                        }
                     }
-                }
-                // Send a response back to the Neuro
-                json result = {
-                    {"command", "action/result"},
-                    {"game", gameName},
-                    {"data", {
-                        {"id", j["data"]["id"]},
-                        {"success", success},
-                        {"message", "Yey"}
-                    }
-                } };
-                // Send the response back to the Neuro
-                sendCommand(result);
+                
+                    // Send a response back to the Neuro
+                    json result = {
+                        {"command", "action/result"},
+                        {"game", gameName},
+                        {"data", {
+                            {"id", j["data"]["id"]},
+                            {"success", success},
+                            {"message", "Yey"}
+                        }
+                    } };
+                    // Send the response back to the Neuro
+                    sendCommand(result);
+                }               
             }
         }
     }

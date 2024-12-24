@@ -87,38 +87,32 @@ namespace neuro{
         return sendCommand(contextMessageJson);
     }
 
-    void NeuroSDK::unregisterAction(std::string actionName) {
-        std::vector< std::string > actionArray;
-        actionArray.push_back(actionName);
+    void NeuroSDK::unregisterActions( std::vector< std::string > actions ) {
         json messageJson = {
             { "command", "actions/unregister" },
             { "game", gameName },
-            { "data", {{"action_names", actionArray } }},
+            { "data", {{"action_names", actions } }},
         };
         sendCommand(messageJson);
-
-        // Remove the action from the local list of registered actions
-        removeAction(Action(actionName,"",""));
+        // Remove the actions from the local list of registered actions
+        for(const std::string actionName : actions) {
+            removeAction(Action(actionName,"",""));
+        }
     }
 
-    // This could should be merged with the above to reduce repeated code.
+    void NeuroSDK::unregisterAction(std::string actionName) {
+        std::vector< std::string > actionArray;
+        actionArray.push_back(actionName);
+        unregisterActions(actionArray);
+    }
+
     void NeuroSDK::unregisterAllActions() {
         std::vector< std::string > actionArray;
 
         for(const Action* action : registeredActions) {
             actionArray.push_back(action->name);
-            removeAction(Action(action->name,"",""));
         }
-
-        // Implementation for unregistering all actions
-        json messageJson = {
-            { "command", "actions/unregister" },
-            { "game", gameName },
-            { "data", {{"action_names", actionArray } }},
-        };
-        sendCommand(messageJson);
-
-        registeredActions.clear(); // Clear the local list of registered actions
+        unregisterActions(actionArray);
     }
 
     bool NeuroSDK::forceAction( std::string gameState, std::string whatToDo, std::vector<std::string> listOfActions ) {

@@ -64,6 +64,10 @@ public:
     // Unregister an action from Neuro 
     void unregisterAction(std::string actionName);
 
+    // remove an array of action strings
+    void unregisterActions( std::vector< std::string > actions );
+
+    // Remove all actions from the server + unregister them locally
     void unregisterAllActions();
 
     // Send some context concerning whats happening
